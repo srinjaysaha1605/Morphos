@@ -1,12 +1,5 @@
-```
-                               _                 
-  /\/\   ___  _ __ _ __ | |__   ___  ___ 
- /    \ / _ \| '__| '_ \| '_ \ / _ \/ __|
-/ /\/\ \ (_) | |  | |_) | | | | (_) \__ \
-\/    \/\___/|_|  | .__/|_| |_|\___/|___/
-                  |_|                    
-```
-
+<div align="center">
+  
 # MORPHOS — Generative Evolutionary Specimen Laboratory
 
 > *“From simple rules, infinite worlds unfold.”*
