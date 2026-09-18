@@ -23,8 +23,6 @@ export const MinimalCanvasArea: React.FC<MinimalCanvasAreaProps> = ({
   onHoverIndexChange,
 }) => {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const [showGenNotice, setShowGenNotice] = useState(false);
-  const [genNoticeText, setGenNoticeText] = useState('');
   const [isFirstFragmenting, setIsFirstFragmenting] = useState(true);
 
   // Animation phase for smooth evolution sequence
@@ -39,18 +37,6 @@ export const MinimalCanvasArea: React.FC<MinimalCanvasAreaProps> = ({
     }, 1200);
     return () => clearTimeout(timer);
   }, []);
-
-  // Trigger background generation banner when generation increments
-  useEffect(() => {
-    if (generation > 1) {
-      setGenNoticeText(`GENERATION ${generation.toString().padStart(2, '0')}`);
-      setShowGenNotice(true);
-      const timer = setTimeout(() => {
-        setShowGenNotice(false);
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [generation]);
 
   // Sync evolution stages with state
   useEffect(() => {
@@ -87,17 +73,6 @@ export const MinimalCanvasArea: React.FC<MinimalCanvasAreaProps> = ({
   return (
     <div className="flex-1 w-full bg-[#000000] relative overflow-hidden flex items-center justify-center p-6 sm:p-12 select-none">
       
-      {/* Restrained Background Generation Notice */}
-      <div
-        className={`fixed inset-0 pointer-events-none flex items-center justify-center z-0 transition-opacity duration-1000 ${
-          showGenNotice ? 'opacity-20 scale-100' : 'opacity-0 scale-95'
-        }`}
-      >
-        <span className="font-display text-2xl sm:text-4xl md:text-5xl tracking-[0.25em] font-light text-white uppercase text-center">
-          {genNoticeText}
-        </span>
-      </div>
-
       {/* Floating Organisms Spatial Container */}
       <div className="w-full h-full max-w-6xl max-h-[82vh] grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-14 md:gap-16 items-center justify-items-center my-auto z-10">
         {population.map((form, index) => {
