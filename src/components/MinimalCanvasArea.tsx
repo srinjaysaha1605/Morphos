@@ -25,6 +25,17 @@ export const MinimalCanvasArea: React.FC<MinimalCanvasAreaProps> = ({
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isFirstFragmenting, setIsFirstFragmenting] = useState(true);
 
+  // Responsive mobile state tracking
+  const [isMobile, setIsMobile] = useState<boolean>(
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Animation phase for smooth evolution sequence
   const [animPhase, setAnimPhase] = useState<
     'idle' | 'fading' | 'converging' | 'transforming' | 'emerging' | 'settling'
@@ -71,10 +82,10 @@ export const MinimalCanvasArea: React.FC<MinimalCanvasAreaProps> = ({
   };
 
   return (
-    <div className="flex-1 w-full bg-[#000000] relative overflow-hidden flex items-center justify-center p-6 sm:p-12 select-none">
+    <div className="flex-1 w-full bg-[#000000] relative overflow-hidden flex items-center justify-center p-3 sm:p-12 select-none">
       
       {/* Floating Organisms Spatial Container */}
-      <div className="w-full h-full max-w-6xl max-h-[82vh] grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-14 md:gap-16 items-center justify-items-center my-auto z-10">
+      <div className="w-full h-full max-w-6xl max-h-[82vh] grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-14 md:gap-16 items-center justify-items-center my-auto z-10">
         {population.map((form, index) => {
           const isSelected = selectedIds.includes(form.id);
           const isHovered = hoveredIdx === index;
@@ -95,20 +106,25 @@ export const MinimalCanvasArea: React.FC<MinimalCanvasAreaProps> = ({
               itemStyle.transform = 'scale(0.5)';
             } else {
               itemStyle.opacity = 1;
-              itemStyle.transform = 'scale(1.1)';
+              itemStyle.transform = 'scale(1.05)';
             }
           } else if (animPhase === 'converging') {
             if (!isSelected) {
               itemStyle.opacity = 0;
               itemStyle.transform = 'scale(0.1)';
             } else {
-              // Selected forms converge into a tight, dense central focal point at scale(0.38)
-              const col = index % 3;
-              const row = Math.floor(index / 3);
-              const dx = (1 - col) * 110;
-              const dy = (0.5 - row) * 100;
+              // Selected forms converge into a tight, dense central focal point within the mobile/desktop viewport limits
+              const cols = isMobile ? 2 : 3;
+              const col = index % cols;
+              const row = Math.floor(index / cols);
+
+              // Responsive translation math strictly bounded for mobile & desktop frames:
+              const dx = isMobile ? (0.5 - col) * 32 : (1 - col) * 110;
+              const dy = isMobile ? (1 - row) * 45 : (0.5 - row) * 100;
+              const scale = isMobile ? 0.32 : 0.38;
+
               itemStyle.opacity = 1;
-              itemStyle.transform = `translate(${dx}px, ${dy}px) scale(0.38)`;
+              itemStyle.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
             }
           } else if (animPhase === 'transforming') {
             itemStyle.opacity = 0.85;
