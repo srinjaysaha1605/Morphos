@@ -1,0 +1,6 @@
+{
+  "name": "MORPHOS",
+  "description": "MORPHOS — Evolutionary Generative Art Instrument. A laboratory for procedural mathematical organism evolution via genetic algorithms.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
