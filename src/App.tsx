@@ -45,6 +45,16 @@ export default function App() {
     setPopulation(initialPop);
   }, []);
 
+  useEffect(() => {
+    const selectedGenome = population.find((genome) =>
+      selectedIds.includes(genome.id)
+    );
+
+    if (selectedGenome) {
+      specimenAudio.updateSpecimenTone(selectedGenome);
+    }
+  }, [population, selectedIds]);
+
   // Evolve Next Generation Core Action
   const handleEvolve = useCallback(() => {
     if (population.length === 0 || isEvolving || selectedIds.length === 0) return;
@@ -131,8 +141,13 @@ export default function App() {
     setLineageHistory([]);
   };
 
+  const handleEnterLab = () => {
+    specimenAudio.setMuted(false);
+    setShowLanding(false);
+  };
+
   if (showLanding) {
-    return <LandingPage onEnterLab={() => setShowLanding(false)} />;
+    return <LandingPage onEnterLab={handleEnterLab} />;
   }
 
   return (

@@ -27,7 +27,7 @@ class SpecimenAudioSynthesizer {
       this.init();
     }
     if (this.ctx && this.ctx.state === 'suspended' && !muted) {
-      this.ctx.resume();
+      void this.ctx.resume();
     }
     if (this.gainNode && this.ctx) {
       const targetGain = muted ? 0 : 0.08; // Quiet ambient volume
@@ -80,7 +80,8 @@ class SpecimenAudioSynthesizer {
     const lfoGain = this.ctx.createGain();
     lfoGain.gain.setValueAtTime(0.02, now);
 
-    lfo.connect(lfoGain.gain);
+    lfo.connect(lfoGain);
+    lfoGain.connect(this.gainNode.gain);
 
     const specGain = this.ctx.createGain();
     specGain.gain.setValueAtTime(0.04, now);
