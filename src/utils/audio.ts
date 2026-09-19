@@ -1,38 +1,40 @@
-import { Genome } from '../types/genome';
-
-class SpecimenAudioSynthesizer {
-  private ctx: AudioContext | null = null;
-  private oscillators: OscillatorNode[] = [];
-  private gainNode: GainNode | null = null;
+class SpecimenAudioPlayer {
+  private backgroundMusic: HTMLAudioElement | null = null;
   private isMuted = true;
   private isInitialized = false;
 
   public init() {
-    if (this.isInitialized) return;
-    try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.ctx = new AudioCtx();
-      this.gainNode = this.ctx.createGain();
-      this.gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
-      this.gainNode.connect(this.ctx.destination);
-      this.isInitialized = true;
-    } catch {
-      console.warn('Web Audio API not supported in this environment.');
-    }
+    if (this.isInitialized || typeof window === 'undefined') return;
+
+    this.backgroundMusic = new Audio('/music.mp3');
+    this.backgroundMusic.loop = true;
+    this.backgroundMusic.preload = 'auto';
+    this.backgroundMusic.volume = 0.18;
+    this.isInitialized = true;
   }
 
   public setMuted(muted: boolean) {
     this.isMuted = muted;
+
     if (!this.isInitialized && !muted) {
       this.init();
     }
-    if (this.ctx && this.ctx.state === 'suspended' && !muted) {
-      void this.ctx.resume();
+
+    if (!this.backgroundMusic) return;
+
+    this.backgroundMusic.muted = muted;
+    this.backgroundMusic.volume = muted ? 0 : 0.18;
+
+    if (muted) {
+      this.backgroundMusic.pause();
+      return;
     }
-    if (this.gainNode && this.ctx) {
-      const targetGain = muted ? 0 : 0.08; // Quiet ambient volume
-      this.gainNode.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.1);
-    }
+
+    // This is called from the landing-page click, so playback is allowed by
+    // browser autoplay policies. Ignore rejection if the browser still blocks it.
+    void this.backgroundMusic.play().catch(() => {
+      console.warn('Background music could not start. Check that public/music.mp3 exists.');
+    });
   }
 
   public toggleMute(): boolean {
@@ -44,94 +46,35 @@ class SpecimenAudioSynthesizer {
     return this.isMuted;
   }
 
-  public updateSpecimenTone(genome: Genome) {
-    if (this.isMuted || !this.ctx || !this.gainNode) return;
-
-    // Stop current oscillators
-    this.stopOscillators();
-
-    const now = this.ctx.currentTime;
-    
-    // Calculate base frequency from symmetry & harmonic frequency
-    // Microtonal mapping: 55Hz (A1) to 440Hz (A4)
-    const baseFreq = 65 + (genome.symmetry * 18) + (genome.harmonicFrequency * 12);
-    
-    // Fundamental drone
-    const osc1 = this.ctx.createOscillator();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(baseFreq, now);
-
-    // Harmonic overtone
-    const osc2 = this.ctx.createOscillator();
-    osc2.type = 'triangle';
-    const overtoneRatio = 1 + (genome.branches * 0.25) + (genome.harmonicAmplitude * 0.02);
-    osc2.frequency.setValueAtTime(baseFreq * overtoneRatio, now);
-
-    // Sub-bass pulse
-    const osc3 = this.ctx.createOscillator();
-    osc3.type = 'sine';
-    osc3.frequency.setValueAtTime(baseFreq * 0.5, now);
-
-    // LFO modulator for organic pulse
-    const lfo = this.ctx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(0.2 + (genome.harmonicFrequency * 0.15), now);
-
-    const lfoGain = this.ctx.createGain();
-    lfoGain.gain.setValueAtTime(0.02, now);
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(this.gainNode.gain);
-
-    const specGain = this.ctx.createGain();
-    specGain.gain.setValueAtTime(0.04, now);
-
-    osc1.connect(specGain);
-    osc2.connect(specGain);
-    osc3.connect(specGain);
-    specGain.connect(this.gainNode);
-
-    osc1.start(now);
-    osc2.start(now);
-    osc3.start(now);
-    lfo.start(now);
-
-    this.oscillators = [osc1, osc2, osc3, lfo];
-  }
-
   public triggerEvolutionPulse() {
-    if (this.isMuted || !this.ctx || !this.gainNode) return;
-    const now = this.ctx.currentTime;
-    
-    // Short crisp high frequency resonance sweep for evolution trigger
-    const sweepOsc = this.ctx.createOscillator();
-    const sweepGain = this.ctx.createGain();
+    // Keep the existing evolution sound effect synthesized with Web Audio.
+    if (typeof window === 'undefined') return;
 
-    sweepOsc.type = 'sine';
-    sweepOsc.frequency.setValueAtTime(880, now);
-    sweepOsc.frequency.exponentialRampToValueAtTime(110, now + 0.18);
+    try {
+      const AudioCtx = window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const sweepOsc = ctx.createOscillator();
+      const sweepGain = ctx.createGain();
 
-    sweepGain.gain.setValueAtTime(0.06, now);
-    sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      sweepOsc.type = 'sine';
+      sweepOsc.frequency.setValueAtTime(880, now);
+      sweepOsc.frequency.exponentialRampToValueAtTime(110, now + 0.18);
 
-    sweepOsc.connect(sweepGain);
-    sweepGain.connect(this.ctx.destination);
+      sweepGain.gain.setValueAtTime(0.06, now);
+      sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
 
-    sweepOsc.start(now);
-    sweepOsc.stop(now + 0.2);
-  }
+      sweepOsc.connect(sweepGain);
+      sweepGain.connect(ctx.destination);
 
-  private stopOscillators() {
-    this.oscillators.forEach(osc => {
-      try {
-        osc.stop();
-        osc.disconnect();
-      } catch {
-        // Ignored if already stopped
-      }
-    });
-    this.oscillators = [];
+      sweepOsc.start(now);
+      sweepOsc.stop(now + 0.2);
+      sweepOsc.addEventListener('ended', () => void ctx.close(), { once: true });
+    } catch {
+      console.warn('Web Audio API is not supported in this environment.');
+    }
   }
 }
 
-export const specimenAudio = new SpecimenAudioSynthesizer();
+export const specimenAudio = new SpecimenAudioPlayer();
