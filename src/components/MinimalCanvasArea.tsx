@@ -4,10 +4,8 @@ import { OrganismCanvas } from './OrganismCanvas';
 
 interface MinimalCanvasAreaProps {
   population: Genome[];
-  generation: number;
   selectedIds: string[];
   isEvolving: boolean;
-  hasEverSelected?: boolean;
   onToggleSelect: (id: string) => void;
   onShowDetails: (form: Genome, index: number) => void;
   onHoverIndexChange: (index: number | null) => void;
@@ -15,7 +13,6 @@ interface MinimalCanvasAreaProps {
 
 export const MinimalCanvasArea: React.FC<MinimalCanvasAreaProps> = ({
   population,
-  generation,
   selectedIds,
   isEvolving,
   onToggleSelect,
@@ -83,7 +80,6 @@ export const MinimalCanvasArea: React.FC<MinimalCanvasAreaProps> = ({
 
   return (
     <div className="flex-1 w-full bg-[#000000] relative overflow-hidden flex items-center justify-center p-3 sm:p-12 select-none">
-      
       {/* Floating Organisms Spatial Container */}
       <div className="w-full h-full max-w-6xl max-h-[82vh] grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-14 md:gap-16 items-center justify-items-center my-auto z-10">
         {population.map((form, index) => {
@@ -196,12 +192,10 @@ export const MinimalCanvasArea: React.FC<MinimalCanvasAreaProps> = ({
                   </button>
                 )}
               </div>
-
             </div>
           );
         })}
       </div>
-
     </div>
   );
 };
